@@ -86,10 +86,17 @@ export const config = {
   get registeredVisible(): boolean | undefined {
     return settings.registered_visible;
   },
+  // The environment wins over the hash the setup page stored, as the README promises for a forgotten password
+  // and for the kill switch: ADMIN_PASSWORD_HASH first, then a plain ADMIN_PASSWORD, which replaces the stored
+  // hash (verifyPassword checks the hash before the plain password, so the stored hash must not be returned).
   get adminPasswordHash(): string {
-    return env.ADMIN_PASSWORD_HASH ?? settings.admin_password_hash ?? "";
+    if (env.ADMIN_PASSWORD_HASH !== undefined) return env.ADMIN_PASSWORD_HASH;
+    if (env.ADMIN_PASSWORD) return "";
+    return settings.admin_password_hash ?? "";
   },
-  adminPassword: env.ADMIN_PASSWORD ?? "",
+  get adminPassword(): string {
+    return env.ADMIN_PASSWORD ?? "";
+  },
   notifyWebhookUrl: env.NOTIFY_WEBHOOK_URL ?? "",
   // Hosts an OAuth client may send the sign-in back to. Stops a phishing link
   // from registering a client that redirects your authorization code elsewhere.
