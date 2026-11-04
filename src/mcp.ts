@@ -5,12 +5,21 @@ import { attestationEnabled } from "./attestation.ts";
 
 export const VERSION = "0.1.15";
 
+// Ceiling on array elements plus object keys in one tools/call `arguments` (GHSA-46jr-4wx8-v453). The SDK
+// leaves it unset by default, so without this an authenticated caller can make validation walk an arbitrarily
+// large payload. The largest legitimate input here is an `accounts` list of a single user's accounts plus a
+// handful of keys, so 1000 is far above real use and still cheap to validate.
+export const MAX_TOOL_INPUT_ELEMENTS = 1000;
+
 /** The MCP server for one request. `attestOnly` is for a token granted bank:attest alone: it gets attest_account and nothing else. */
 export function createServer(opts: { attestOnly?: boolean } = {}): McpServer {
   if (opts.attestOnly) {
     const server = new McpServer(
       { name: "bank", version: VERSION },
-      { instructions: "Answers one question for a third party: whether an IBAN belongs to the owner, as a signed object (attest_account). Nothing else is available with this access." },
+      {
+        instructions: "Answers one question for a third party: whether an IBAN belongs to the owner, as a signed object (attest_account). Nothing else is available with this access.",
+        maxToolInputElements: MAX_TOOL_INPUT_ELEMENTS,
+      },
     );
     registerTools(server, { attestOnly: true });
     return server;
@@ -32,6 +41,7 @@ export function createServer(opts: { attestOnly?: boolean } = {}): McpServer {
         "If a tool says a consent is no longer valid, use start_consent for that bank; nothing else is lost.",
         "If a tool answers that the server is not set up or that the Enable Banking application is not active, relay its instructions to the user word for word. Those are one-time steps in a browser; retrying does not help.",
       ].join(" "),
+      maxToolInputElements: MAX_TOOL_INPUT_ELEMENTS,
     },
   );
   registerTools(server);

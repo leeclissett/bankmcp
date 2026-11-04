@@ -1,0 +1,15 @@
+# Opens a PR when a new Node 24 base image or a new action release appears. Node stays on the 24 line:
+# a major-version move is a deliberate change, not a routine bump.
+version: 2
+updates:
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -8,7 +8,7 @@ import type { OAuthServerProvider, AuthorizationParams } from "@modelcontextprot
 import type { OAuthRegisteredClientsStore } from "@modelcontextprotocol/sdk/server/auth/clients.js";
 import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import type { OAuthClientInformationFull, OAuthTokenRevocationRequest, OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
-import { InvalidGrantError, InvalidClientError, InvalidClientMetadataError, InvalidScopeError } from "@modelcontextprotocol/sdk/server/auth/errors.js";
+import { InvalidGrantError, InvalidClientMetadataError, InvalidScopeError, InvalidTokenError } from "@modelcontextprotocol/sdk/server/auth/errors.js";
 import { config } from "./config.ts";
 import { maxAttestableBalance } from "./attestation.ts";
 import { loginPage } from "./pages.ts";
@@ -259,8 +259,11 @@ export class SingleUserProvider implements OAuthServerProvider {
 
   async verifyAccessToken(tokenValue: string): Promise<AuthInfo> {
     const t = this.store.data.oauth.tokens[sha256(tokenValue)];
-    if (!t || t.kind !== "access") throw new InvalidClientError("Invalid access token");
-    if (t.expires < now()) throw new InvalidClientError("Access token expired");
+    // invalid_token, not invalid_client: requireBearerAuth answers only InvalidTokenError with 401 and a
+    // WWW-Authenticate challenge (RFC 6750 section 3.1), which is what tells a client to refresh or sign in again.
+    // Any other OAuthError becomes a 400 that clients do not treat as an expired session.
+    if (!t || t.kind !== "access") throw new InvalidTokenError("Invalid access token");
+    if (t.expires < now()) throw new InvalidTokenError("Access token expired");
     return { token: tokenValue, clientId: t.client_id, scopes: t.scopes, expiresAt: t.expires, resource: t.resource ? new URL(t.resource) : undefined };
   }
 
