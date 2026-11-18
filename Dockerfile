@@ -1,7 +1,7 @@
 # Base image pinned by tag and by the digest of its multi-arch index. To move to a new Node 24 release, replace
 # this one line: the tag says which release it is, the digest is what is actually pulled. Get the digest with
 #   docker buildx imagetools inspect node:24.X.Y-alpine3.24   (first "Digest:" line)
-FROM node:24.22.2-alpine3.24@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85
+FROM node:24.22.3-alpine3.24@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 LABEL org.opencontainers.image.title="BankMCP™" \
       org.opencontainers.image.description="Read-only MCP server for your own bank accounts via Enable Banking. Self-hosted, one user." \
       org.opencontainers.image.source="https://github.com/noskillish/bankmcp" \
